@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assignment Reset Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --success: #27ae60;
+      --warning: #f1c40f;
+      --danger: #e74c3c;
+      --light: #ecf0f1;
+      --dark: #2c3e50;
+      --banner-success: #d4edda;
+      --banner-text: #155724;
+      --banner-border: #c3e6cb;
+      --info-blue: #d1ecf1;
+      --info-blue-text: #0c5460;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      margin: 2rem;
+      background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+      color: var(--dark);
+      line-height: 1.6;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e0e6ed;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--primary);
+      font-size: 2.2rem;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .banner {
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: var(--banner-success);
+      color: var(--banner-text);
+      border: 1px solid var(--banner-border);
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    .banner.info {
+      background-color: var(--info-blue);
+      color: var(--info-blue-text);
+      border-color: #bee5eb;
+    }
+
+    .banner.hidden {
+      display: none;
+    }
+
+    .banner i {
+      margin-right: 10px;
+    }
+
+    .banner-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: inherit;
+      font-size: 1.2rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+
+    th, td {
+      padding: 1.1rem;
+      border: 1px solid #e0e6ed;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    th {
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      font-size: 1.05rem;
+    }
+
+    tr:nth-child(even) { background-color: #f8fafc; }
+    tr:hover { background-color: #f1f5f9; }
+
+    .status {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      min-width: 110px;
+    }
+    
+    .status.not-started { background-color: #e9ecef; color: #495057; }
+    .status.in-progress { background-color: #d0ebff; color: #1864ab; }
+    .status.submitted { background-color: #d3f9d8; color: #2b8a3e; }
+    .status.late { background-color: #ffe3e3; color: #c92a2a; }
+    .status.graded { background-color: #e6fcf5; color: #0ca678; }
+
+    input[type="text"] {
+      padding: 0.65rem 0.85rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      width: 100px;
+      transition: all 0.2s ease;
+      font-size: 14px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(52,152,219,0.1), inset 0 1px 2px rgba(0,0,0,0.05);
+      outline: none;
+    }
+
+    .checkbox-cell {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      border: 2px solid #9baec3;
+      border-radius: 5px;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox.checked {
+      background-color: #007BFF;
+      border-color: #007BFF;
+    }
+
+    .checkbox.checked::after {
+      content: "✓";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 14px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .action-buttons button {
+      width: 42px;
+      height: 42px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      position: relative;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .action-buttons button i {
+      font-size: 18px;
+      color: white;
+      transition: transform 0.2s ease;
+    }
+
+    .action-buttons button:hover i {
+      transform: scale(1.15);
+    }
+
+    .action-buttons button::after {
+      content: attr(aria-label);
+      position: absolute;
+      left: 50%;
+      top: -38px;
+      transform: translateX(-50%);
+      background: #2d3436;
+      color: white;
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      font-weight: 500;
+    }
+
+    .action-buttons button:hover::after { opacity: 1; top: -43px; }
+
+    .action-buttons button::before {
+      content: '';
+      position: absolute;
+      top: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 5px;
+      border-style: solid;
+      border-color: #2d3436 transparent transparent transparent;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .action-buttons button:hover::before { opacity: 1; }
+
+    .reset { background: var(--warning); }
+    .submit { background: var(--secondary); }
+    .resume { background: var(--success); }
+
+    .action-buttons button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: grayscale(0.8);
+      transform: none;
+      box-shadow: none;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+      backdrop-filter: blur(3px);
+    }
+
+    .modal-content {
+      background: white;
+      padding: 2.2rem;
+      border-radius: 12px;
+      max-width: 650px;
+      width: 90%;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+      animation: modalSlide 0.4s ease-out;
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(25px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal h3 {
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+      font-size: 1.6rem;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal p {
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 1.8rem;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .modal-buttons button {
+      padding: 10px 22px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .cancel-btn {
+      background: #f1f3f5;
+      border: 1px solid #dee2e6;
+      color: #495057;
+    }
+
+    .cancel-btn:hover {
+      background: #e9ecef;
+    }
+
+    .confirm-btn {
+      background: var(--success);
+      border: none;
+      color: white;
+    }
+
+    .confirm-btn:hover {
+      background: #219653;
+    }
+
+    .danger-btn {
+      background: var(--danger);
+      border: none;
+      color: white;
+    }
+
+    .danger-btn:hover {
+      background: #c0392b;
+    }
+
+    .danger-btn:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .attempt-list {
+      margin: 15px 0;
+      padding: 0;
+      list-style: none;
+      max-height: 250px;
+      overflow-y: auto;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    
+    .attempt-item {
+      margin-bottom: 12px;
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .radio-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      width: 100%;
+      padding: 8px;
+      transition: background-color 0.2s;
+      border-radius: 4px;
+    }
+    
+    .radio-label:hover {
+      background-color: #f0f8ff;
+    }
+    
+    input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    
+    .instruction {
+      font-weight: 500;
+      color: var(--primary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .instruction i {
+      color: var(--secondary);
+    }
+    
+    .confirmation-text {
+      background-color: #fff8e1;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    .highlight-row {
+      background-color: #fff3cd !important;
+      animation: pulse 2s infinite !important;
+      position: relative;
+    }
+
+    @keyframes pulse {
+      0%, 100% { background-color: #fff3cd; }
+      50% { background-color: #ffe69c; }
+    }
+
+    .late-penalty {
+      color: var(--danger);
+      font-weight: 600;
+      margin-top: 8px;
+      display: block;
+      font-size: 0.9rem;
+    }
+
+    .grading-status {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background-color: #e7f5ff;
+      color: #1864ab;
+      font-size: 0.85rem;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .form-control:focus {
+      border-color: #80bdff;
+      outline: 0;
+      box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+    }
+
+    .time-input-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .time-input {
+      width: 60px;
+      text-align: center;
+    }
+
+    .error-message {
+      color: var(--danger);
+      font-size: 0.85rem;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .warning-box {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 12px;
+      border-radius: 4px;
+      margin: 15px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .time-display {
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      padding: 10px;
+      margin: 10px 0;
+      font-weight: 500;
+    }
+
+    .time-display span {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      margin-left: 5px;
+      cursor: pointer;
+      color: var(--secondary);
+    }
+
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 250px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 10px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .tooltip .tooltiptext::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #333 transparent transparent transparent;
+    }
+
+    .attempt-info {
+      display: flex;
+      align-items: center;
+      font-size: 0.95rem;
+    }
+    
+    .attempt-number {
+      font-weight: 600;
+      color: var(--primary);
+      margin-right: 5px;
+    }
+    
+    .attempt-date {
+      color: var(--dark);
+    }
+
+    .audit-log {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    
+    .audit-log h3 {
+      color: var(--primary);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .log-entry {
+      padding: 10px;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .log-action {
+      font-weight: 600;
+    }
+    
+    .log-details {
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    
+    /* New styles for attempt selection modals */
+    .attempt-option {
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .attempt-option:hover {
+      background-color: #e3f2fd;
+      border-color: #bbdefb;
+    }
+    
+    .attempt-option.selected {
+      background-color: #e1f5fe;
+      border-color: #4fc3f7;
+      box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
+    }
+    
+    .attempt-details {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: #616161;
+    }
+    
+    .attempt-label {
+      font-weight: 600;
+      color: #1976d2;
+    }
+    
+    .attempt-meta {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .action-summary {
+      margin-top: 15px;
+      padding: 15px;
+      background-color: #f5f5f5;
+      border-radius: 8px;
+      font-size: 0.95rem;
+    }
+    
+    .summary-highlight {
+      font-weight: 600;
+      color: #d32f2f;
+    }
+
+    @media (max-width: 768px) {
+      body { margin: 1rem; }
+      table { display: block; overflow-x: auto; }
+      th, td { min-width: 120px; }
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      .action-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+      .action-buttons button {
+        margin-bottom: 5px;
+      }
+      .audit-log {
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>
+      <i class="fas fa-graduation-cap"></i> 
+      Assignment Reset Management
+    </h1>
+  </div>
+
+  <div id="confirmationBanner" class="banner hidden">
+    <div>
+      <i class="fas fa-check-circle"></i>
+      <span id="bannerMessage">A new attempt is available to the student.</span>
+    </div>
+    <button class="banner-close" onclick="closeBanner()">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th><div class="checkbox-cell" onclick="toggleAllCheckboxes(this)">
+          <div class="checkbox" id="selectAllCheckbox"></div>
+        </div></th>
+        <th>#</th>
+        <th>Student Name</th>
+        <th>Status</th>
+        <th>Overall Grade (%)</th>
+        <th>Percentage Earned</th>
+        <th>Enter a New Score</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr id="row-1" data-assignment-id="1" data-submitted="false" data-has-multiple-attempts="true" data-time-limit-minutes="90" data-time-elapsed-minutes="45" data-total-time-minutes="90" data-due-date="2025-06-10T23:59" data-late-submission-allowed="true" data-auto-graded="true">
+        <td class="checkbox-cell" onclick="toggleCheckbox(this)"><div class="checkbox"></div></td>
+        <td>1</td>
+        <td>Alice Johnson</td>
+        <td><span class="status in-progress">In Progress</span></td>
+        <td>100%</td>
+        <td>Not Entered</td>
+        <td><input type="text" placeholder="Enter Score" /></td>
+        <td class="action-buttons">
+          <button class="reset" aria-label="Reset Attempt" onclick="openResetModal('1')"><i class="fas fa-undo"></i></button>
+          <button class="resume" aria-label="Resume Assignment" disabled><i class="fas fa-unlock"></i></button>
+          <button class="submit" aria-label="Submit Attempt" onclick="openSubmitModal('1')"><i class="fas fa-square-check"></i></button>
+        </td>
+      </tr>
+      <tr id="row-2" data-assignment-id="2" data-submitted="true" data-has-multiple-attempts="true" data-time-limit-minutes="60" data-time-elapsed-minutes="60" data-total-time-minutes="60" data-due-date="2025-05-20T23:59" data-late-submission-allowed="true" data-auto-graded="false">
+        <td class="checkbox-cell" onclick="toggleCheckbox(this)"><div class="checkbox"></div></td>
+        <td>2</td>
+        <td>Brian Smith</td>
+        <td><span class="status submitted">Submitted</span></td>
+        <td>90%</td>
+        <td>85%</td>
+        <td><input type="text" placeholder="Enter Score" disabled /></td>
+        <td class="action-buttons">
+          <button class="reset" aria-label="Reset Attempt" onclick="openResetModal('2')"><i class="fas fa-undo"></i></button>
+          <button class="resume" aria-label="Resume Assignment" onclick="openResumeModal('2')"><i class="fas fa-unlock"></i></button>
+          <button class="submit" aria-label="Submit Attempt" disabled><i class="fas fa-square-check"></i></button>
+        </td>
+      </tr>
+      <tr id="row-3" data-assignment-id="3" data-submitted="true" data-has-multiple-attempts="true" data-time-limit-minutes="60" data-time-elapsed-minutes="60" data-total-time-minutes="60" data-due-date="2025-05-20T23:59" data-late-submission-allowed="true" data-auto-graded="true">
+        <td class="checkbox-cell" onclick="toggleCheckbox(this)"><div class="checkbox"></div></td>
+        <td>3</td>
+        <td>Crystal Davis</td>
+        <td><span class="status late">Submitted Late</span></td>
+        <td>100%</td>
+        <td>92%</td>
+        <td><input type="text" placeholder="Enter Score" /></td>
+        <td class="action-buttons">
+          <button class="reset" aria-label="Reset Attempt" onclick="openResetModal('3')"><i class="fas fa-undo"></i></button>
+          <button class="resume" aria-label="Resume Assignment" onclick="openResumeModal('3')"><i class="fas fa-unlock"></i></button>
+          <button class="submit" aria-label="Submit Attempt" disabled><i class="fas fa-square-check"></i></button>
+        </td>
+      </tr>
+      <tr id="row-4" data-assignment-id="4" data-submitted="false" data-has-multiple-attempts="false" 
+      data-time-limit-minutes="0" data-time-elapsed-minutes="0" 
+      data-total-time-minutes="0" data-due-date="2025-05-30T23:59" 
+      data-late-submission-allowed="false" data-auto-graded="false">
+      <td class="checkbox-cell" onclick="toggleCheckbox(this)"><div class="checkbox"></div></td>
+        <td>4</td>
+        <td>Dana Rodriguez</td>
+        <td><span class="status not-started">Not Started</span></td>
+        <td>85%</td>
+        <td>Not Entered</td>
+        <td>
+          <input type="text" placeholder="Enter Score" />
+        </td>
+        <td class="action-buttons">
+          <button class="reset" aria-label="Reset Attempt" disabled><i class="fas fa-undo"></i></button>
+          <button class="resume" aria-label="Resume Assignment" disabled><i class="fas fa-unlock"></i></button>
+          <button class="submit" aria-label="Submit Attempt" disabled><i class="fas fa-square-check"></i></button>
+        </td>
+      </tr>
+      <tr id="row-5" data-assignment-id="5" data-submitted="true" data-has-multiple-attempts="false" 
+      data-time-limit-minutes="120" data-time-elapsed-minutes="120" 
+      data-total-time-minutes="120" data-due-date="2025-05-25T23:59" 
+      data-late-submission-allowed="false" data-auto-graded="false">
+        <td class="checkbox-cell" onclick="toggleCheckbox(this)"><div class="checkbox"></div></td>
+        <td>5</td>
+        <td>Elise Thompson</td>
+        <td><span class="status submitted">Submitted</span></td>
+        <td>95%</td>
+        <td>88%</td>
+        <td><input type="text" placeholder="Enter Score" /></td>
+        <td class="action-buttons">
+          <button class="reset" aria-label="Reset Attempt" onclick="openResetModal('5')"><i class="fas fa-undo"></i></button>
+          <button class="resume" aria-label="Resume Assignment" onclick="openResumeModal('5')"><i class="fas fa-unlock"></i></button>
+          <button class="submit" aria-label="Submit Attempt" disabled><i class="fas fa-square-check"></i></button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Reset Attempt Modal -->
+  <div id="resetModal" class="modal">
+    <div class="modal-content">
+      <h3><i class="fas fa-undo"></i> Reset Attempt</h3>
+      <div id="resetModalBody">
+        <!-- Dynamic content will be inserted here -->
+      </div>
+      <div class="modal-buttons">
+        <button class="cancel-btn" onclick="closeModal('resetModal')">Cancel</button>
+        <button class="danger-btn" id="resetBtn" onclick="confirmReset()">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resume Attempt Modal -->
+  <div id="resumeModal" class="modal">
+    <div class="modal-content">
+      <h3><i class="fas fa-unlock"></i> Resume Attempt</h3>
+      <div id="resumeModalBody">
+        <!-- Dynamic content will be inserted here -->
+      </div>
+      <div class="modal-buttons">
+        <button class="cancel-btn" onclick="closeModal('resumeModal')">Cancel</button>
+        <button class="confirm-btn" id="resumeBtn" onclick="confirmResume()">Resume</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit Attempt Modal -->
+  <div id="submitModal" class="modal">
+    <div class="modal-content">
+      <h3><i class="fas fa-square-check"></i> Submit Attempt</h3>
+      <div id="submitModalBody">
+        <!-- Dynamic content will be inserted here -->
+      </div>
+      <div class="modal-buttons">
+        <button class="cancel-btn" onclick="closeModal('submitModal')">Cancel</button>
+        <button class="confirm-btn" id="submitBtn" onclick="confirmSubmit()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content">
+      <h3><i class="fas fa-exclamation-circle"></i> Confirm Action</h3>
+      <div id="confirmModalBody">
+        <p id="confirmMessage">Are you sure you want to perform this action?</p>
+      </div>
+      <div class="modal-buttons">
+        <button class="cancel-btn" onclick="closeModal('confirmModal')">Cancel</button>
+        <button class="confirm-btn" id="confirmActionBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="audit-log">
+    <h3><i class="fas fa-history"></i> Audit Log</h3>
+    <div id="auditLogContent">
+      <!-- Audit log entries will be inserted here -->
+    </div>
+  </div>
+
+  <script>
+    // Sample attempts data for each assignment
+    const attemptsData = {
+      1: [
+        { id: 'attempt1', startTime: '2025-05-25T10:30:00', duration: '45 minutes', submitted: false }
+      ],
+      2: [
+        { id: 'attempt1', startTime: '2025-05-20T09:15:00', duration: '60 minutes', submitted: true, submittedDate: '2025-05-20T10:15:00', score: '85%' },
+        { id: 'attempt2', startTime: '2025-05-21T14:30:00', duration: '45 minutes', submitted: true, submittedDate: '2025-05-21T15:15:00', score: '90%' }
+      ],
+      3: [
+        { id: 'attempt1', startTime: '2025-05-19T11:20:00', duration: '30 minutes', submitted: true, submittedDate: '2025-05-19T11:50:00', score: '92%' },
+        { id: 'attempt2', startTime: '2025-05-20T15:30:00', duration: '30 minutes', submitted: true, submittedDate: '2025-05-20T16:00:00', score: '95%' },
+        { id: 'attempt3', startTime: '2025-05-21T09:45:00', duration: '40 minutes', submitted: true, submittedDate: '2025-05-21T10:25:00', score: '97%' }
+      ],
+      4: [],
+      5: [
+        { id: 'attempt1', startTime: '2025-05-24T14:00:00', duration: '120 minutes', submitted: true, submittedDate: '2025-05-24T16:00:00', score: '88%' }
+      ]
+    };
+
+    // Audit log data
+    const auditLog = [];
+    
+    let currentAssignmentId = null;
+    let selectedAttemptId = null;
+    let currentAction = null;
+
+    function openResetModal(assignmentId) {
+      currentAssignmentId = assignmentId;
+      const row = document.getElementById(`row-${assignmentId}`);
+      const hasMultipleAttempts = row.dataset.hasMultipleAttempts === 'true';
+      
+      let modalContent = `
+        <p>This will allow the student to start a new attempt. Their previous attempt will be archived for reference.</p>
+      `;
+      
+      if (hasMultipleAttempts) {
+        const attempts = attemptsData[assignmentId]?.filter(a => a.submitted) || [];
+        if (attempts.length > 0) {
+          modalContent += `
+            <div class="instruction">
+              <i class="fas fa-info-circle"></i> 
+              Submitted attempts for this assignment:
+            </div>
+            <ul class="attempt-list">
+              ${attempts.map((attempt, index) => `
+                <li class="attempt-item">
+                  <label class="radio-label">
+                    <input type="radio" name="resetAttempt" value="${attempt.id}" 
+                         id="reset-attempt-${attempt.id}" onchange="selectAttempt('${attempt.id}')">
+                    <div class="attempt-info">
+                      <span class="attempt-number">Attempt #${index+1}</span>
+                      <span class="attempt-date">- ${formatDateTime(attempt.submittedDate)}</span>
+                      <span style="margin-left: 10px; color: var(--success);">Score: ${attempt.score}</span>
+                    </div>
+                  </label>
+                </li>
+              `).join('')}
+            </ul>
+          `;
+          document.getElementById('resetBtn').disabled = true;
+        }
+      } else {
+        // For assignments with single attempt, auto-select it
+        const attempts = attemptsData[assignmentId] || [];
+        if (attempts.length > 0) {
+          selectedAttemptId = attempts[0].id;
+        }
+      }
+      
+      document.getElementById('resetModalBody').innerHTML = modalContent;
+      document.getElementById('resetModal').style.display = 'flex';
+    }
+
+    function openResumeModal(assignmentId) {
+      currentAssignmentId = assignmentId;
+      const row = document.getElementById(`row-${assignmentId}`);
+      const studentName = row.cells[2].textContent;
+      const hasMultipleAttempts = row.dataset.hasMultipleAttempts === 'true';
+      
+      let modalContent = `
+        <p>This will allow the student to resume an existing attempt.</p>
+      `;
+      
+      if (hasMultipleAttempts) {
+        const attempts = attemptsData[assignmentId]?.filter(a => !a.submitted) || [];
+        if (attempts.length > 0) {
+          modalContent += `
+            <div class="instruction">
+              <i class="fas fa-info-circle"></i> 
+              Select the attempt to resume:
+            </div>
+            <div id="resumeAttemptsContainer">
+              ${attempts.map((attempt, index) => `
+                <div class="attempt-option" onclick="selectResumeAttempt('${attempt.id}', this)">
+                  <div class="attempt-label">Attempt #${index+1}</div>
+                  <div class="attempt-details">
+                    <span>Started: ${formatDateTime(attempt.startTime)}</span>
+                    <span>Time spent: ${attempt.duration}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+          document.getElementById('resumeBtn').disabled = true;
+        } else {
+          modalContent += `
+            <div class="warning-box">
+              <i class="fas fa-exclamation-triangle"></i>
+              There are no in-progress attempts to resume for this assignment.
+            </div>
+          `;
+          document.getElementById('resumeBtn').disabled = true;
+        }
+      } else {
+        // For assignments with single attempt, auto-select it
+        const attempts = attemptsData[assignmentId] || [];
+        if (attempts.length > 0) {
+          selectedAttemptId = attempts[0].id;
+          modalContent += `
+            <div class="action-summary">
+              Resuming the only attempt for this assignment. The student will continue where they left off.
+            </div>
+          `;
+        } else {
+          modalContent += `
+            <div class="warning-box">
+              <i class="fas fa-exclamation-triangle"></i>
+              No attempts found for this assignment.
+            </div>
+          `;
+          document.getElementById('resumeBtn').disabled = true;
+        }
+      }
+      
+      document.getElementById('resumeModalBody').innerHTML = modalContent;
+      document.getElementById('resumeModal').style.display = 'flex';
+    }
+
+    function openSubmitModal(assignmentId) {
+      currentAssignmentId = assignmentId;
+      const row = document.getElementById(`row-${assignmentId}`);
+      const studentName = row.cells[2].textContent;
+      const hasMultipleAttempts = row.dataset.hasMultipleAttempts === 'true';
+      
+      let modalContent = `
+        <p>This will submit an attempt on behalf of the student.</p>
+      `;
+      
+      if (hasMultipleAttempts) {
+        const attempts = attemptsData[assignmentId]?.filter(a => !a.submitted) || [];
+        if (attempts.length > 0) {
+          modalContent += `
+            <div class="instruction">
+              <i class="fas fa-info-circle"></i> 
+              Select the attempt to submit:
+            </div>
+            <div id="submitAttemptsContainer">
+              ${attempts.map((attempt, index) => `
+                <div class="attempt-option" onclick="selectSubmitAttempt('${attempt.id}', this)">
+                  <div class="attempt-label">Attempt #${index+1}</div>
+                  <div class="attempt-details">
+                    <span>Started: ${formatDateTime(attempt.startTime)}</span>
+                    <span>Time spent: ${attempt.duration}</span>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+          document.getElementById('submitBtn').disabled = true;
+        } else {
+          modalContent += `
+            <div class="warning-box">
+              <i class="fas fa-exclamation-triangle"></i>
+              There are no in-progress attempts to submit for this assignment.
+            </div>
+          `;
+          document.getElementById('submitBtn').disabled = true;
+        }
+      } else {
+        // For assignments with single attempt, auto-select it
+        const attempts = attemptsData[assignmentId] || [];
+        if (attempts.length > 0) {
+          selectedAttemptId = attempts[0].id;
+          modalContent += `
+            <div class="action-summary">
+              Submitting the only attempt for this assignment. 
+              <span class="summary-highlight">This action cannot be undone.</span>
+            </div>
+          `;
+        } else {
+          modalContent += `
+            <div class="warning-box">
+              <i class="fas fa-exclamation-triangle"></i>
+              No attempts found for this assignment.
+            </div>
+          `;
+          document.getElementById('submitBtn').disabled = true;
+        }
+      }
+      
+      document.getElementById('submitModalBody').innerHTML = modalContent;
+      document.getElementById('submitModal').style.display = 'flex';
+    }
+
+    function selectAttempt(attemptId) {
+      selectedAttemptId = attemptId;
+      document.getElementById('resetBtn').disabled = false;
+    }
+
+    function selectResumeAttempt(attemptId, element) {
+      selectedAttemptId = attemptId;
+      document.getElementById('resumeBtn').disabled = false;
+      
+      // Remove selected class from all options
+      const options = document.querySelectorAll('#resumeAttemptsContainer .attempt-option');
+      options.forEach(opt => opt.classList.remove('selected'));
+      
+      // Add selected class to clicked option
+      element.classList.add('selected');
+    }
+
+    function selectSubmitAttempt(attemptId, element) {
+      selectedAttemptId = attemptId;
+      document.getElementById('submitBtn').disabled = false;
+      
+      // Remove selected class from all options
+      const options = document.querySelectorAll('#submitAttemptsContainer .attempt-option');
+      options.forEach(opt => opt.classList.remove('selected'));
+      
+      // Add selected class to clicked option
+      element.classList.add('selected');
+    }
+
+    function confirmReset() {
+      openConfirmModal("Are you sure you want to allow the student to restart this assignment?", "reset");
+    }
+
+    function confirmResume() {
+      openConfirmModal("Are you sure you want to resume this attempt for the student?", "resume");
+    }
+
+    function confirmSubmit() {
+      openConfirmModal("Are you sure you want to submit this attempt for the student?", "submit");
+    }
+
+    function processReset() {
+      if (!currentAssignmentId) return;
+      
+      const row = document.getElementById(`row-${currentAssignmentId}`);
+      const assignmentId = currentAssignmentId;
+      const attempts = attemptsData[assignmentId] || [];
+      
+      // Find the attempt to archive
+      let attemptToArchive = null;
+      if (selectedAttemptId) {
+        attemptToArchive = attempts.find(a => a.id === selectedAttemptId);
+      } else if (attempts.length > 0) {
+        // If no selection, archive the last attempt
+        attemptToArchive = attempts[attempts.length - 1];
+      }
+      
+      if (attemptToArchive) {
+        // Archive the attempt
+        attemptToArchive.archived = true;
+        attemptToArchive.resetBy = "Instructor";
+        attemptToArchive.archivedDate = new Date().toISOString();
+        
+        // Add to audit log
+        const studentName = row.cells[2].textContent;
+        const logEntry = {
+          action: "Reset Attempt",
+          assignment: `Assignment #${row.cells[1].textContent}`,
+          student: studentName,
+          attempt: attemptToArchive.id,
+          date: new Date().toISOString(),
+          details: `Reset by Instructor at ${new Date().toLocaleTimeString()}`
+        };
+        auditLog.unshift(logEntry);
+        updateAuditLog();
+      }
+      
+      // Create a new attempt
+      const newAttempt = {
+        id: 'attempt_' + Date.now(),
+        startTime: new Date().toISOString(),
+        duration: '0 minutes',
+        submitted: false
+      };
+      attemptsData[assignmentId].push(newAttempt);
+      
+      // Update the row data
+      row.dataset.submitted = 'false';
+      row.dataset.timeElapsedMinutes = '0';
+      
+      // Update status display
+      const statusCell = row.querySelector('.status');
+      statusCell.textContent = 'Not Started';
+      statusCell.className = 'status not-started';
+      
+      // Clear and enable score input
+      const earnedCell = row.cells[5];
+      earnedCell.textContent = 'Not Entered';
+      const input = row.querySelector('input[type="text"]');
+      if (input) {
+        input.value = '';
+        input.disabled = false;
+        input.placeholder = 'Enter Score';
+      }
+      
+      // Update action buttons
+      row.querySelector('.resume').disabled = true;
+      row.querySelector('.submit').disabled = true;
+      row.querySelector('.reset').disabled = true;
+      
+      // Show banner
+      const studentName = row.cells[2].textContent;
+      document.getElementById('bannerMessage').textContent = `A new attempt is available to the student (${studentName}).`;
+      document.getElementById('confirmationBanner').classList.remove('hidden');
+      
+      // Highlight the row temporarily
+      row.classList.add('highlight-row');
+      setTimeout(() => {
+        row.classList.remove('highlight-row');
+      }, 4000);
+      
+      // Close modals
+      closeModal('resetModal');
+      closeModal('confirmModal');
+    }
+
+    function processResume() {
+      if (!currentAssignmentId) return;
+      
+      const row = document.getElementById(`row-${currentAssignmentId}`);
+      const assignmentId = currentAssignmentId;
+      const attempts = attemptsData[assignmentId] || [];
+      
+      // Find the attempt to resume
+      let attemptToResume = null;
+      if (selectedAttemptId) {
+        attemptToResume = attempts.find(a => a.id === selectedAttemptId);
+      }
+      
+      if (attemptToResume) {
+        // Update the attempt
+        attemptToResume.resumed = true;
+        attemptToResume.resumedDate = new Date().toISOString();
+        
+        // Add to audit log
+        const studentName = row.cells[2].textContent;
+        const logEntry = {
+          action: "Resume Attempt",
+          assignment: `Assignment #${row.cells[1].textContent}`,
+          student: studentName,
+          attempt: attemptToResume.id,
+          date: new Date().toISOString(),
+          details: `Resumed by Instructor at ${new Date().toLocaleTimeString()}`
+        };
+        auditLog.unshift(logEntry);
+        updateAuditLog();
+        
+        // Update row status to in progress
+        row.dataset.submitted = 'false';
+        
+        // Update status display
+        const statusCell = row.querySelector('.status');
+        statusCell.textContent = 'In Progress';
+        statusCell.className = 'status in-progress';
+        
+        // Update action buttons
+        row.querySelector('.resume').disabled = true;
+        row.querySelector('.submit').disabled = false;
+        row.querySelector('.reset').disabled = false;
+        
+        // Show banner
+        document.getElementById('bannerMessage').textContent = `The attempt has been resumed for ${studentName}.`;
+        document.getElementById('confirmationBanner').classList.remove('hidden');
+        
+        // Highlight the row temporarily
+        row.classList.add('highlight-row');
+        setTimeout(() => {
+          row.classList.remove('highlight-row');
+        }, 4000);
+      }
+      
+      // Close modals
+      closeModal('resumeModal');
+      closeModal('confirmModal');
+    }
+
+    function processSubmit() {
+      if (!currentAssignmentId) return;
+      
+      const row = document.getElementById(`row-${currentAssignmentId}`);
+      const assignmentId = currentAssignmentId;
+      const attempts = attemptsData[assignmentId] || [];
+      
+      // Find the attempt to submit
+      let attemptToSubmit = null;
+      if (selectedAttemptId) {
+        attemptToSubmit = attempts.find(a => a.id === selectedAttemptId);
+      }
+      
+      if (attemptToSubmit) {
+        // Update the attempt
+        attemptToSubmit.submitted = true;
+        attemptToSubmit.submittedDate = new Date().toISOString();
+        attemptToSubmit.submittedBy = "Instructor";
+        
+        // Add to audit log
+        const studentName = row.cells[2].textContent;
+        const logEntry = {
+          action: "Submit Attempt",
+          assignment: `Assignment #${row.cells[1].textContent}`,
+          student: studentName,
+          attempt: attemptToSubmit.id,
+          date: new Date().toISOString(),
+          details: `Submitted by Instructor at ${new Date().toLocaleTimeString()}`
+        };
+        auditLog.unshift(logEntry);
+        updateAuditLog();
+        
+        // Update row status to submitted
+        row.dataset.submitted = 'true';
+        
+        // Check if submission is late
+        const dueDate = new Date(row.dataset.dueDate);
+        const submittedDate = new Date();
+        const isLate = row.dataset.lateSubmissionAllowed === 'true' && submittedDate > dueDate;
+        
+        // Update status display
+        const statusCell = row.querySelector('.status');
+        statusCell.textContent = isLate ? 'Submitted Late' : 'Submitted';
+        statusCell.className = isLate ? 'status late' : 'status submitted';
+        
+        // Update action buttons
+        row.querySelector('.resume').disabled = false;
+        row.querySelector('.submit').disabled = true;
+        row.querySelector('.reset').disabled = false;
+        
+        // Show banner
+        document.getElementById('bannerMessage').textContent = `The attempt has been submitted for ${studentName}.`;
+        document.getElementById('confirmationBanner').classList.remove('hidden');
+        
+        // Highlight the row temporarily
+        row.classList.add('highlight-row');
+        setTimeout(() => {
+          row.classList.remove('highlight-row');
+        }, 4000);
+      }
+      
+      // Close modals
+      closeModal('submitModal');
+      closeModal('confirmModal');
+    }
+
+    function openConfirmModal(message, action) {
+      document.getElementById('confirmMessage').textContent = message;
+      currentAction = action;
+      document.getElementById('confirmModal').style.display = 'flex';
+      
+      // Set up the confirm button based on the action
+      const confirmBtn = document.getElementById('confirmActionBtn');
+      confirmBtn.onclick = function() {
+        if (currentAction === 'reset') {
+          processReset();
+        } else if (currentAction === 'resume') {
+          processResume();
+        } else if (currentAction === 'submit') {
+          processSubmit();
+        }
+        closeModal('confirmModal');
+      };
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+      currentAssignmentId = null;
+      selectedAttemptId = null;
+      currentAction = null;
+    }
+
+    function closeBanner() {
+      document.getElementById('confirmationBanner').classList.add('hidden');
+    }
+
+    function formatDateTime(dateTimeString) {
+      if (!dateTimeString) return 'N/A';
+      const date = new Date(dateTimeString);
+      return date.toLocaleString('en-US', {
+        month: '2-digit',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function updateAuditLog() {
+      const logContainer = document.getElementById('auditLogContent');
+      logContainer.innerHTML = '';
+      
+      auditLog.slice(0, 5).forEach(log => {
+        const logElement = document.createElement('div');
+        logElement.className = 'log-entry';
+        logElement.innerHTML = `
+          <div>
+            <div class="log-action">${log.action} - ${log.assignment}</div>
+            <div class="log-details">
+              Student: ${log.student} | Attempt: ${log.attempt} | 
+              ${formatDateTime(log.date)}
+            </div>
+          </div>
+          <div>${log.details}</div>
+        `;
+        logContainer.appendChild(logElement);
+      });
+    }
+
+    function toggleCheckbox(cell) {
+      const checkbox = cell.querySelector('.checkbox');
+      checkbox.classList.toggle('checked');
+    }
+
+    function toggleAllCheckboxes(headerCell) {
+      const isChecked = !headerCell.querySelector('.checkbox').classList.contains('checked');
+      const checkboxes = document.querySelectorAll('.checkbox');
+      
+      checkboxes.forEach(checkbox => {
+        if (isChecked) {
+          checkbox.classList.add('checked');
+        } else {
+          checkbox.classList.remove('checked');
+        }
+      });
+      
+      // Update the header checkbox
+      headerCell.querySelector('.checkbox').classList.toggle('checked', isChecked);
+    }
+
+    // Initialize button states
+    document.addEventListener('DOMContentLoaded', function() {
+      const rows = document.querySelectorAll('tr[data-assignment-id]');
+      rows.forEach(row => {
+        const timeElapsed = parseInt(row.dataset.timeElapsedMinutes);
+        const isSubmitted = row.dataset.submitted === 'true';
+        const submitButton = row.querySelector('.submit');
+        const resumeButton = row.querySelector('.resume');
+        const resetButton = row.querySelector('.reset');
+        
+        // Submit button - enabled only for in-progress assignments
+        if (timeElapsed > 0 && !isSubmitted) {
+          submitButton.disabled = false;
+        } else {
+          submitButton.disabled = true;
+        }
+        
+        // Resume button - enabled only for submitted assignments
+        resumeButton.disabled = !isSubmitted;
+        
+        // Reset button - enabled only for submitted assignments
+        resetButton.disabled = !isSubmitted;
+      });
+      
+      // Initialize audit log
+      updateAuditLog();
+    });
+  </script>
+</body>
+</html>
